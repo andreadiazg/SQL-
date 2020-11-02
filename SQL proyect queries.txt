@@ -1,0 +1,64 @@
+QUESTION 1 
+
+with t1 as 
+      (SELECT film.title, category.name as Category_name, rental.inventory_id, 
+	      inventory.film_id, rental.rental_id
+       from inventory
+       join rental 
+       on inventory.inventory_id=rental.inventory_id
+       join film 
+       on film.film_id=inventory.film_id
+       join film_category
+       on film_category.film_id=film.film_id
+       join category
+       on category.category_id=film_category.category_id
+where category.name= 'Animation' or category.name='Children' or category.name='Classics'
+      or category.name='Comedy' or category.name='Family' or category.name='Music')
+
+select distinct title, Category_name , 
+       count(rental_id) over (partition by title) as rental_count
+from t1
+order by category_name
+
+QUESTION 2 
+
+SELECT film.title, category.name as Category_name,film.rental_duration,
+       ntile(4) over (order by rental_duration) as standard_quartile
+       from category
+       join film_category  
+       on category.category_id=film_category.category_id
+       join film 
+       on film_category.film_id=film.film_id
+where category.name= 'Animation' or category.name='Children' or category.name='Classics'
+      or category.name='Comedy' or category.name='Family' or category.name='Music' 
+
+QUESTION 3
+
+with t1 as 
+(SELECT film.title, category.name as Category_name,film.rental_duration,
+       ntile(4) over (order by rental_duration) as standard_quartile
+       from category
+       join film_category  
+       on category.category_id=film_category.category_id
+       join film 
+       on film_category.film_id=film.film_id
+where category.name= 'Animation' or category.name='Children' or category.name='Classics'
+      or category.name='Comedy' or category.name='Family' or category.name='Music')
+	  
+select category_name, standard_quartile, count (title)
+from t1
+group by 1,2
+order by 1,2
+
+QUESTION 4 (1ST FROM 2SET)
+
+SELECT date_part('month',rental.rental_date) as  rental_month, 
+       date_part('year',rental.rental_date) as rental_year, store.store_id,
+	   count(rental.rental_id) as count_rentals
+from rental
+join staff
+on staff.staff_id=rental.staff_id
+join store 
+on store.store_id=staff.store_id
+group by 3,2,1
+order by count_rentals desc
